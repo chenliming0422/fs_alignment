@@ -8,6 +8,8 @@ This code implements image alignment for focal stack applications using the inve
 
 **OpenCV 4.2.0**
 
+PS: you may need to change the opencv path.
+
 # test
 
 The code in the folder **src** includes two tests:
