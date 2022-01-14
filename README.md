@@ -32,7 +32,6 @@ test_warp.at<double>(1, 2) = 3;
 test(image, test_warp);
 
 return 0;
-
 ```
 
 You can also change the numbers in the matrix **test_warp** in the code.
