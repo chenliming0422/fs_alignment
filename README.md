@@ -4,7 +4,9 @@ This code implements image alignment for focal stack applications using the inve
 # environment
 
 **1. Visual Studio 2019** 
+
 **2. OpenCV 4.2.0**
+
 PS: you may need to change the opencv path.
 
 # test
@@ -12,6 +14,7 @@ PS: you may need to change the opencv path.
 The code in the folder **src** includes two tests:
 
 ## single image test
+
 Copy following code in the main function:
 
 ```	
@@ -29,7 +32,9 @@ test(image, test_warp);
 
 return 0;
 ```
+
 You can also change the numbers in the matrix **test_warp** in the code.
 
 ## image stack test
+
 Run the main function
