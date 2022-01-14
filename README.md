@@ -4,9 +4,9 @@ This code implements image alignment for focal stack applications using the inve
 
 # environment
 
-**Visual studio 2019** 
+**1. Visual Studio 2019** 
 
-**OpenCV 4.2.0**
+**2. OpenCV 4.2.0**
 
 PS: you may need to change the opencv path.
 
@@ -19,7 +19,7 @@ The code in the folder **src** includes two tests:
 Copy following code in the main function:
 
 ```
-
+	
 	string imagePath = "../../data/signle_image_test/screw.png";
 	Mat image = imread(imagePath, IMREAD_GRAYSCALE);
 	imshow("image", image);
@@ -33,6 +33,7 @@ Copy following code in the main function:
 	test(image, test_warp);
 
 	return 0;
+
 
 ```
 
