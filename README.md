@@ -20,7 +20,7 @@ Copy following code in the main function:
 
 ```
 	
-	string imagePath = "../../data/signle_image_test/screw.png";
+string imagePath = "../../data/signle_image_test/screw.png";
 	Mat image = imread(imagePath, IMREAD_GRAYSCALE);
 	imshow("image", image);
 	waitKey();
