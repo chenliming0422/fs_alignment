@@ -15,7 +15,7 @@ The code in the folder **src** includes two tests:
 
 ## single image test
 
-Copy following code in the main function:
+Copy the following code to the main function:
 
 ```	
 string imagePath = "../../data/single_image_test/screw.png";
