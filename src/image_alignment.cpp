@@ -371,6 +371,7 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 	Mat warp = Mat::zeros(2, 3, CV_64FC1);
 	warp.at<double>(0, 2) += 0.5;
 	warp.at<double>(1, 2) += 0.5;
+	Mat_<double> prev_warp;
 
 	// pre-computation stage
 	// (1) pre-compute image gradient of the reference
@@ -416,9 +417,19 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 		}*/
 		if (iter > 0 && (prev_rmse - curr_rmse < criterion))
 		{
+			if (prev_rmse < curr_rmse)
+			{
+				warp = prev_warp;
+				if (iter == 1)
+				{
+					warp.at<double>(0, 2) -= 0.5;
+					warp.at<double>(1, 2) -= 0.5;
+				}
+			}
 			break;
 		}
 		prev_rmse = curr_rmse;
+		warp.copyTo(prev_warp);
 
 		// (3) compute steepest descent parameter updates
 		Mat sd_delta_p;
@@ -452,6 +463,7 @@ void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight,
 	Mat warp = Mat::zeros(2, 3, CV_64FC1);
 	warp.at<double>(0, 2) += 0.5;
 	warp.at<double>(1, 2) += 0.5;
+	Mat_<double> prev_warp;
 
 	if (weight.type() != CV_64FC1)
 	{
@@ -506,10 +518,19 @@ void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight,
 		}*/
 		if (iter > 0 && (prev_rmse - curr_rmse < criterion))
 		{
+			if (prev_rmse < curr_rmse)
+			{
+				warp = prev_warp;
+				if (iter == 1)
+				{
+					warp.at<double>(0, 2) -= 0.5;
+					warp.at<double>(1, 2) -= 0.5;
+				}
+			}
 			break;
 		}
 		prev_rmse = curr_rmse;
-
+		warp.copyTo(prev_warp);
 		// (3) compute steepest descent parameter updates
 		Mat sd_delta_p;
 		sd_update(weighted_sd_images, error_image, Np, &sd_delta_p);
@@ -540,11 +561,11 @@ void test(Mat& test_image, Mat& warp_test)
 	//imshow("warp_image", warp_image);
 	//waitKey();
 	//destroyWindow("warp_image");
-	imwrite("../../data/test/warp_test_image.png", warp_image);
+	imwrite("../../data/single_image_test/warp_test_image.png", warp_image);
 
 	// warp back
 	Mat warp_icia;
-	inverse_compositional_align(test_image, warp_image, &warp_icia);
+	inverse_compositional_align(test_image, warp_image, &warp_icia, 100, 0);
 
 	cout << "comparing params" << endl;
 	cout << "input warp params:" << endl;

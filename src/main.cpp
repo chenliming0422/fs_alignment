@@ -33,8 +33,8 @@ using namespace cv;
 int main()
 {
 	int stackSize = 13;
-	string stackPath = "../../data/Screw";
-	string outputPath = "../../data/Screw/align";
+	string stackPath = "../../data/sculpture/raw";
+	string outputPath = "../../data/sculpture/align";
 	vector<Mat> imageStack;
 	vector<Mat> warpStack;
 
@@ -47,14 +47,15 @@ int main()
 
 	align_image_stack(imageStack, &warpStack);
 	
-	/*
+	
 	for (int i = 1; i < stackSize; i++)
 	{
 		Mat warp_image;
+		cout << warpStack[i - 1] << endl;
 		warp_affine(imageStack[i], warpStack[i - 1], &warp_image);
 		string name = outputPath + "/" + to_string(i) + ".png";
 		imwrite(name, warp_image);
-	}*/
+	}
 
 	return 0;
 }
