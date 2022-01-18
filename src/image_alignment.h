@@ -33,7 +33,7 @@ void compute_jacobian_affine(int height, int width, Mat* jacobian);
 
 void compute_sd_images(Mat& grad_x, Mat& grad_y, Mat& jacobian, int Np, vector<Mat>* sd_images);
 
-void compute_weighted_sd_images(Mat& grad_x, Mat& grad_y, Mat& jacobian, Mat& weight, int Np, vector<Mat>* sd_images);
+void weight_sd_images(vector<Mat>& sd_images, Mat& weight, vector<Mat>* weighted_sd_images);
 
 void compute_hessian(vector<Mat>& sd_images, int Np, Mat* hessian);
 
@@ -43,9 +43,11 @@ void sd_update(vector<Mat>& sd_images, Mat& error_image, int Np, Mat* sd_delta_p
 
 void affine_param_update(Mat& warp_p, Mat& delta_p);
 
-void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int max_iter = 20, double criterion = 0.0);
+void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_matrix, int max_iter = 20, double criterion = 0.001);
 
-void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight, Mat* warp_param, int max_iter = 20, double criterion = 0.0);
+void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight, Mat* warp_matrix, int max_iter = 20, double criterion = 0.001);
 
 void test(Mat& test_image, Mat& warp_test);
+
+void align_image_stack(vector<Mat>& stack, vector<Mat>* warp_matrix);
 

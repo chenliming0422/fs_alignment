@@ -19,6 +19,8 @@ void CImageFilters::medianPhaseFilter(float* imageIn, float* imageOut, int filte
 {
 	if (filterSize < 2) return;
 
+	memcpy(imageOut, imageIn, sizeof(imageIn[0]) * m_imageSize);
+	
 	int hsize = (filterSize) / 2;
 	vector<float> vect;
 	// Median filter of the phase image

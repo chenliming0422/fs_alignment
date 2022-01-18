@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
 #include "CImageFilters.h"
 
 #include "opencv2/opencv.hpp"
@@ -23,5 +24,7 @@ public:
 	void unwrapThreeFreqPhaseLine(float* unwrappedPhase, unsigned char** fringeImage,
 		vector<int> fringePeriods, vector<int>fringeSteps, int spikeFilterSize, float* Iavg = nullptr, float* amplitude = nullptr);
 	int m_cameraWidth, m_cameraHeight, m_cameraSize;
+	void getFringeContrast(float* Iavg, float* amplitude, float* fringeContrast);
+	void addFringeContrast(float* fringeContrast_1, float* fringeContrast_2, float* fringeContrast_out);
 };
 

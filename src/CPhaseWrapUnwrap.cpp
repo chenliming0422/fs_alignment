@@ -35,7 +35,7 @@ void CPhaseWrapUnwrap::computePhase(float* wrapphase, unsigned char* fringeImage
 		{
 			c += fringeImage[N][idx] * cosN[N];
 			s += fringeImage[N][idx] * sinN[N];
-			Isum += float(fringeImage[N][idx]);
+			Isum += float(fringeImage[N][idx]);			
 		}
 		wrapphase[idx] = (float)(-atan2(s, c)) * one_over_two_pi + 0.5f;
 		Ip[idx] = Isum / nStep;
@@ -162,7 +162,7 @@ void CPhaseWrapUnwrap::unwrapThreeFreqPhaseLine(float* unwrappedPhase, unsigned 
 		float k1 = (uph2[idx]) * T2 / T1 - ph1[idx];
 		unwrappedPhase[idx] = ph1[idx] + round(k1);
 	}
-
+	
 	CImageFilters filter(m_cameraWidth, m_cameraHeight);
 	// remove spikes
 	filter.medianPhaseFilter(unwrappedPhase, uphf, spikeFilterSize);
@@ -181,3 +181,37 @@ void CPhaseWrapUnwrap::unwrapThreeFreqPhaseLine(float* unwrappedPhase, unsigned 
 	delete[] ph2;
 	delete[] ph3;
 }
+
+void CPhaseWrapUnwrap::getFringeContrast(float* Iavg, float* amplitude, float* fringeContrast)
+{
+	for (int idx = 0; idx < m_cameraSize; idx++)
+	{
+		if (Iavg[idx] == 0)
+		{
+			fringeContrast[idx] = 0;
+		}
+		else
+		{
+			fringeContrast[idx] = amplitude[idx] / Iavg[idx];
+		}
+		
+	}
+}
+
+void CPhaseWrapUnwrap::addFringeContrast(float* fringeContrast_1, float* fringeContrast_2, float* fringeContrast_out)
+{
+	for (int idx = 0; idx < m_cameraSize; idx++)
+	{
+		fringeContrast_out[idx] = (fringeContrast_1[idx] + fringeContrast_2[idx]) / 2;
+	}
+
+	/*float max_contrast = *max_element(fringeContrast_out, fringeContrast_out + m_cameraSize);
+	float min_contrast = *min_element(fringeContrast_out, fringeContrast_out + m_cameraSize);
+	float difference = max_contrast - min_contrast;
+
+	for (int idx = 0; idx < m_cameraSize; idx++)
+	{
+		fringeContrast_out[idx] = (fringeContrast_out[idx] - min_contrast) / difference;
+	}*/
+}
+

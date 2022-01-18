@@ -7,8 +7,11 @@
 */
 void warp_affine(Mat& image, Mat& warp, Mat* output)
 {
-	Mat warp_matrix;
-	warp.copyTo(warp_matrix);
+	assert(image.data != nullptr);
+	assert(warp.rows == 2 && warp.cols == 3);
+
+	Mat_<double> warp_matrix;
+	warp.convertTo(warp_matrix, CV_64FC1);
 	warp_matrix.at<double>(0, 0)++;
 	warp_matrix.at<double>(1, 1)++;
 	warpAffine(image, (*output), warp_matrix, image.size(), INTER_LINEAR | WARP_INVERSE_MAP);
@@ -32,7 +35,7 @@ void gradient(Mat& image, Mat* grad_x, Mat* grad_y)
 	Mat_<double> centGx = (xBackMat - xForwMat) / 2;
 	Mat_<double> tmpGx = cv::Mat::zeros(rows, cols, CV_64FC1);
 
-	for (int i = 1; i < cols - 1; i++) 
+	for (int i = 1; i < cols - 1; i++)
 	{
 		centGx.col(i - 1).copyTo(tmpGx.col(i));
 	}
@@ -44,7 +47,7 @@ void gradient(Mat& image, Mat* grad_x, Mat* grad_y)
 	Mat_<double> yForwMat = dImg(cv::Range(0, rows - 2), cv::Range(0, cols));
 	Mat_<double> yBackMat = dImg(cv::Range(2, rows), cv::Range(0, cols));
 	Mat_<double> centGy = (yBackMat - yForwMat) / 2;
-	Mat_<double> tmpGy = cv::Mat::zeros(rows, cols, CV_64F);
+	Mat_<double> tmpGy = cv::Mat::zeros(rows, cols, CV_64FC1);
 	for (int i = 1; i < rows - 1; i++) {
 		centGy.row(i - 1).copyTo(tmpGy.row(i));
 	}
@@ -60,7 +63,7 @@ void gradient(Mat& image, Mat* grad_x, Mat* grad_y)
 * @brief
 * @param
 * jacobian = [x, 0, y, 0, 1, 0
-              0, x, 0, y, 0, 1]
+			  0, x, 0, y, 0, 1]
 */
 void compute_jacobian_affine(int height, int width, Mat* jacobian)
 {
@@ -80,7 +83,7 @@ void compute_jacobian_affine(int height, int width, Mat* jacobian)
 	// 0
 	for (int i = 0; i < height; i++)
 	{
-		for (int j = width; j < 2*width; j++)
+		for (int j = width; j < 2 * width; j++)
 		{
 			tmp_jacobian.at<ushort>(i, j) = 0;
 		}
@@ -123,7 +126,7 @@ void compute_jacobian_affine(int height, int width, Mat* jacobian)
 	}
 
 	//0
-	for (int i = height; i < 2*height; i++)
+	for (int i = height; i < 2 * height; i++)
 	{
 		for (int j = 0; j < width; j++)
 		{
@@ -134,7 +137,7 @@ void compute_jacobian_affine(int height, int width, Mat* jacobian)
 	//x
 	for (int i = height; i < 2 * height; i++)
 	{
-		for (int j = width; j < 2*width; j++)
+		for (int j = width; j < 2 * width; j++)
 		{
 			tmp_jacobian.at<ushort>(i, j) = j - width;
 		}
@@ -220,36 +223,18 @@ void compute_sd_images(Mat& grad_x, Mat& grad_y, Mat& jacobian, int Np, vector<M
 * @brief: Compute steepest descent images with weight. Used in the ICIA algorithm with weighted L2 norm
 * @param
 */
-void compute_weighted_sd_images(Mat& grad_x, Mat& grad_y, Mat& jacobian, Mat& weight, int Np, vector<Mat>* sd_images)
+void weight_sd_images(vector<Mat>& sd_images, Mat& weight, vector<Mat>* weighted_sd_images)
 {
-	assert(Np > 0);
-	assert(grad_x.size() == grad_y.size());
-	assert(jacobian.rows == 2 * grad_x.rows && jacobian.rows == 2 * grad_y.rows);
-	assert(jacobian.cols == Np * grad_x.cols && jacobian.cols == Np * grad_y.cols);
-	assert((grad_x.type() == CV_64FC1) && (grad_y.type() == CV_64FC1) 
-		   && (jacobian.type() == CV_16UC1) && weight.type() == CV_64FC1);
+	assert(sd_images.size() > 0);
+	assert(sd_images[0].rows == weight.rows && sd_images[0].cols == weight.cols);
+	assert(sd_images[0].type() == CV_64FC1 && weight.type() == CV_64FC1);
 
-	int width = grad_x.cols;
-	int height = grad_x.rows;
-
-	double Tx;
-	double Ty;
-
-	for (int p = 0; p < Np; p++)
+	int Np = sd_images.size();
+	for (int n = 0; n < Np; n++)
 	{
-		Mat sd_image(height, width, CV_64FC1);
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < width; j++)
-			{
-				Tx = grad_x.at<double>(i, j) * jacobian.at<ushort>(i, j + p * width);
-				Ty = grad_y.at<double>(i, j) * jacobian.at<ushort>(i + height, j + p * width);
-				sd_image.at<double>(i, j) = weight.at<double>(i, j) * (Tx + Ty);
-			}
-		}
-		sd_images->push_back(sd_image);
+		Mat new_sd_images = sd_images[n].mul(weight);
+		weighted_sd_images->push_back(new_sd_images.clone());
 	}
-
 }
 
 /*
@@ -314,7 +299,7 @@ void sd_update(vector<Mat>& sd_images, Mat& error_image, int Np, Mat* sd_delta_p
 	assert(error_image.type() == CV_64FC1 && sd_images[0].type() == CV_64FC1);
 
 	Mat tmp_sd_delta_p(Np, 1, CV_64FC1);
-	
+
 	for (int p = 0; p < Np; p++)
 	{
 		Mat tmp = sd_images[p].mul(error_image);
@@ -378,6 +363,8 @@ void affine_param_update(Mat& warp_p, Mat& delta_p)
 */
 void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int max_iter, double criterion)
 {
+	double prev_rmse;
+	double curr_rmse;
 	int Np = 6;
 	int height = source.rows;
 	int width = source.cols;
@@ -407,6 +394,7 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 	compute_hessian(sd_images, Np, &hessian);
 	Mat hessian_inv = hessian.inv();
 
+	cout << "start iteration" << endl;
 	// iteration stage
 	for (int iter = 0; iter < max_iter; iter++)
 	{
@@ -414,18 +402,23 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 		// (1) compute warped image with current warp matrix
 		warp_affine(source, warp, &warp_image);
 
-		// (2) compute error image and MSE
+		// (2) compute error image and RMSE
 		Mat warp_image_double;
 		Mat target_double;
 		warp_image.convertTo(warp_image_double, CV_64FC1);
 		target.convertTo(target_double, CV_64FC1);
 		Mat error_image = warp_image_double - target_double;
-		double rmse = norm(error_image) / sqrt(width * height);
-		cout << rmse << endl;
-		if (rmse <= criterion)
+		curr_rmse = norm(error_image) / sqrt(width * height);
+		cout << curr_rmse << endl;
+		/*if (curr_rmse <= criterion)
+		{
+			break;
+		}*/
+		if (iter > 0 && (prev_rmse - curr_rmse < criterion))
 		{
 			break;
 		}
+		prev_rmse = curr_rmse;
 
 		// (3) compute steepest descent parameter updates
 		Mat sd_delta_p;
@@ -437,7 +430,7 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 		// (5) matrix parameters update
 		affine_param_update(warp, delta_p);
 	}
-
+	cout << "finish" << endl;
 	warp.copyTo(*warp_param);
 }
 
@@ -451,12 +444,19 @@ void inverse_compositional_align(Mat& source, Mat& target, Mat* warp_param, int 
 */
 void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight, Mat* warp_param, int max_iter, double criterion)
 {
+	double prev_rmse = 100000;
+	double curr_rmse;
 	int Np = 6;
 	int height = source.rows;
 	int width = source.cols;
 	Mat warp = Mat::zeros(2, 3, CV_64FC1);
 	warp.at<double>(0, 2) += 0.5;
 	warp.at<double>(1, 2) += 0.5;
+
+	if (weight.type() != CV_64FC1)
+	{
+		weight.convertTo(weight, CV_64FC1);
+	}
 
 	// pre-computation stage
 	// (1) pre-compute image gradient of the reference
@@ -473,13 +473,18 @@ void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight,
 
 	// (3) pre-compute weighted steepest descent images of the reference
 	vector<Mat> sd_images;
-	compute_weighted_sd_images(grad_x, grad_y, jacobian, weight, Np, &sd_images);
+	compute_sd_images(grad_x, grad_y, jacobian, Np, &sd_images);
 
-	// (4) pre-compute weighted hessian matrix
+	// (4) add weight to sd images
+	vector<Mat> weighted_sd_images;
+	weight_sd_images(sd_images, weight, &weighted_sd_images);
+
+	// (5) pre-compute weighted hessian matrix
 	Mat hessian;
 	compute_weighted_hessian(sd_images, weight, Np, &hessian);
 	Mat hessian_inv = hessian.inv();
 
+	cout << "start iteration" << endl;
 	// iteration stage
 	for (int iter = 0; iter < max_iter; iter++)
 	{
@@ -487,22 +492,27 @@ void weighted_inverse_compositional_align(Mat& source, Mat& target, Mat& weight,
 		// (1) compute warped image with current warp matrix
 		warp_affine(source, warp, &warp_image);
 
-		// (2) compute error image and MSE
+		// (2) compute error image and RMSE
 		Mat warp_image_double;
 		Mat target_double;
 		warp_image.convertTo(warp_image_double, CV_64FC1);
 		target.convertTo(target_double, CV_64FC1);
 		Mat error_image = warp_image_double - target_double;
-		double rmse = norm(error_image) / sqrt(width * height);
-		cout << rmse << endl;
-		if (rmse <= criterion)
+		curr_rmse = norm(error_image) / sqrt(width * height);
+		cout << prev_rmse << curr_rmse << endl;
+		/*if (curr_rmse <= criterion)
+		{
+			break;
+		}*/
+		if (iter > 0 && (prev_rmse - curr_rmse < criterion))
 		{
 			break;
 		}
+		prev_rmse = curr_rmse;
 
 		// (3) compute steepest descent parameter updates
 		Mat sd_delta_p;
-		sd_update(sd_images, error_image, Np, &sd_delta_p);
+		sd_update(weighted_sd_images, error_image, Np, &sd_delta_p);
 
 		// (4) compute parameter updates
 		Mat delta_p = hessian_inv * sd_delta_p;
@@ -545,4 +555,33 @@ void test(Mat& test_image, Mat& warp_test)
 	//Mat icia_estimate;
 	//warpAffine(test_image, icia_estimate, warp_icia, warp_image.size());
 	//imwrite("../../data/test/warp_icia.png", icia_estimate);
+}
+
+
+/*
+* @brief
+* @param
+*/
+void align_image_stack(vector<Mat>& stack, vector<Mat>* warp_matrix)
+{
+	assert(stack.size() >= 2);
+	
+	int stackSize = stack.size();
+	Mat warpToFirst = Mat::eye(3, 3, CV_64FC1);
+
+	for (int stackIdx = 0; stackIdx < stackSize-1; stackIdx++)
+	{
+		Mat warp;
+		inverse_compositional_align(stack[stackIdx+1], stack[stackIdx], &warp);
+	
+		warp.push_back(Mat::zeros(1, 3, CV_64FC1));
+		warp += Mat::eye(3, 3, CV_64FC1);
+		warpToFirst = warp * warpToFirst;
+		Mat warpToFirstParam;
+		warpToFirst.copyTo(warpToFirstParam);
+		warpToFirstParam.pop_back();
+		warpToFirstParam.at<double>(0, 0)--;
+		warpToFirstParam.at<double>(1, 1)--;
+		warp_matrix->push_back(warpToFirstParam);
+	}
 }

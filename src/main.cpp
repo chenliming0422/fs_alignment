@@ -32,18 +32,29 @@ using namespace cv;
 
 int main()
 {
-	string imagePath = "../../data/test/screw.png";
+	int stackSize = 13;
+	string stackPath = "../../data/Screw";
+	string outputPath = "../../data/Screw/align";
+	vector<Mat> imageStack;
+	vector<Mat> warpStack;
 
-	Mat image = imread(imagePath, IMREAD_GRAYSCALE);
-	imshow("image", image);
-	waitKey();
-	destroyWindow("image");
+	for (int i = 0; i < stackSize; i++)
+	{
+		string imageName = stackPath + "/" + to_string(i) + ".png";
+		Mat image = imread(imageName, IMREAD_GRAYSCALE);
+		imageStack.push_back(image.clone());
+	}
 
-	Mat test_warp = 0.01 * Mat::eye(2, 3, CV_64FC1);
-	test_warp.at<double>(0, 2) = 2;
-	test_warp.at<double>(1, 2) = 3;
-
-	test(image, test_warp);
+	align_image_stack(imageStack, &warpStack);
+	
+	/*
+	for (int i = 1; i < stackSize; i++)
+	{
+		Mat warp_image;
+		warp_affine(imageStack[i], warpStack[i - 1], &warp_image);
+		string name = outputPath + "/" + to_string(i) + ".png";
+		imwrite(name, warp_image);
+	}*/
 
 	return 0;
 }

@@ -19,22 +19,19 @@ The code in the folder **src** includes two tests:
 Copy following code in the main function:
 
 ```
-	
-	string imagePath = "../../data/signle_image_test/screw.png";
-	Mat image = imread(imagePath, IMREAD_GRAYSCALE);
-	imshow("image", image);
-	waitKey();
-	destroyWindow("image");
+string imagePath = "../../data/signle_image_test/screw.png";
+Mat image = imread(imagePath, IMREAD_GRAYSCALE);
+imshow("image", image);
+waitKey();
+destroyWindow("image");
 
-	Mat test_warp = 0.01 * Mat::eye(2, 3, CV_64FC1);
-	test_warp.at<double>(0, 2) = 2;
-	test_warp.at<double>(1, 2) = 3;
+Mat test_warp = 0.01 * Mat::eye(2, 3, CV_64FC1);
+test_warp.at<double>(0, 2) = 2;
+test_warp.at<double>(1, 2) = 3;
 
-	test(image, test_warp);
+test(image, test_warp);
 
-	return 0;
-
-
+return 0;
 ```
 
 You can also change the numbers in the matrix **test_warp** in the code.
