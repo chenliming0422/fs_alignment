@@ -38,4 +38,6 @@ You can also change the numbers in the matrix **test_warp** in the code.
 
 ## image stack test
 
-Run the main function
+Align all images to the first image in the image sequence. The main function in **main.cpp** now is for this application.
+
+The image stack in the folder **Screw** is captured with different focal length, so different parts in images are in focus. The goal of this test is to align the stack in order to stitch them to form an all-in-focus image.
