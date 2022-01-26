@@ -142,14 +142,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\image_alignment.cpp" />
-    <ClCompile Include="..\..\src\CImageFilters.cpp" />
-    <ClCompile Include="..\..\src\CPhaseWrapUnwrap.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\image_alignment.h" />
-    <ClInclude Include="..\..\src\CImageFilters.h" />
-    <ClInclude Include="..\..\src\CPhaseWrapUnwrap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
